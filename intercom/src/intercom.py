@@ -1,6 +1,7 @@
 # intercom.py
 # nbiggs - 01/21/18
 
+import RPi.GPIO as GPIO
 import contextlib
 import datetime
 import json
@@ -8,6 +9,7 @@ import logging
 import os
 import random
 import string
+import time
 
 
 class Intercom(object):
@@ -15,11 +17,21 @@ class Intercom(object):
   KEYS = 'keys.txt'
   PASS = 'pass.txt'
 
+  # Pins to interact with the intercom
+  KEY_PIN = 11
+  TALK_PIN = 26
+
   # Delay between successive openings of the door (in seconds)
   DELAY = 20
 
   def __init__(self):
     self.last_door_time = None
+
+    # Initialize the pins
+    GPIO.setmode(GPIO.BCM)
+    GPIO.setwarnings(False)
+    GPIO.setup((self.KEY_PIN, self.TALK_PIN), GPIO.OUT)
+    GPIO.output((self.KEY_PIN, self.TALK_PIN), GPIO.LOW)
 
     # Prep the filesystem
     os.makedirs(self.DIR, exist_ok=True)
@@ -27,20 +39,41 @@ class Intercom(object):
     if (not os.path.isfile(pass_path)):
       raise Exception('Missing password file: %s' % pass_path)
 
+  def _press_button(self, pin):
+    GPIO.output(pin, GPIO.LOW)
+    time.sleep(0.25)
+    GPIO.output(pin, GPIO.HIGH)
+    time.sleep(0.5)
+    GPIO.output(pin, GPIO.LOW)
+
   def open_door(self):
     now = int(datetime.datetime.now().strftime('%s'))
     if ((self.last_door_time is None) or
         (self.last_door_time + self.DELAY < now)):
       self.last_door_time = now
 
-      # SERIAL_OBJ.write(bytearray([1]))
+      # Do the door sequence
+      GPIO.output((self.KEY_PIN, self.TALK_PIN), GPIO.LOW)
+      self._press_button(self.KEY_PIN)
+      self._press_button(self.TALK_PIN)
+      self._press_button(self.KEY_PIN)
+
+      # Let the person enter
+      time.sleep(7)
+      self._press_button(self.TALK_PIN)
+
       logging.info('Door opened')
       return True
 
     return False
 
   def test_door(self):
-    # SERIAL_OBJ.write(bytearray([2]))
+    # Do the door sequence
+    GPIO.output((self.KEY_PIN, self.TALK_PIN), GPIO.LOW)
+    self._press_button(self.KEY_PIN)
+    time.sleep(5)
+    self._press_button(self.KEY_PIN)
+
     logging.info('Tested door')
 
   def _get_pass(self):

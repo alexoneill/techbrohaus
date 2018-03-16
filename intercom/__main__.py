@@ -41,9 +41,9 @@ def parse_args(argparser):
                          default=PORT)
 
   # Disable threading?
-  argparser.add_argument('-d', '--disable-threading',
-                         help='Disable Flask threading?',
-                         action='store_true')
+  argparser.add_argument('-t', '--threading',
+                         help='Flask threading?',
+                         default=True, action='store_false')
 
   # Parse arguments and produce flags
   return argparser.parse_args()
@@ -133,7 +133,7 @@ def main(argparser):
 
     return util.make_response(res)
 
-  app.run(flags.host, flags.port, threaded=(not flags.disable_threading))
+  app.run(flags.host, flags.port, threaded=not flags.threading)
   return 0
 
 if (__name__ == '__main__'):
