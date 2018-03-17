@@ -91,7 +91,7 @@ def main(argparser):
 
   @app.route('/august/validate/<int:code>')
   def validate(code):
-    if august.validate(code):
+    if upstairs.validate(code):
       return util.make_response('Validated!')
     return util.make_response('Not validated')
 
