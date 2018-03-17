@@ -7,6 +7,7 @@ import argparse
 import logging
 import sys
 
+from src import august
 from src import intercom
 from src import util
 
