@@ -89,9 +89,9 @@ def main(argparser):
 
     return util.make_response('Invalid key', 403)
 
-  @app.route('/august/validate/<int:code>')
+  @app.route('/august/validate/<code>')
   def validate(code):
-    if august.validate(code):
+    if upstairs.validate(code):
       return util.make_response('Validated!')
     return util.make_response('Not validated')
 

@@ -110,6 +110,8 @@ class August(object):
           'code': code,
         })
 
+      return ('userId' in req.json())
+
   def open_door(self):
     self._session()
     with open(os.path.join(self.DIR, self.AUGUST_LOCK_ID)) as l:

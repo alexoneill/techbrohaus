@@ -137,7 +137,6 @@ class Intercom(object):
     if (passcode != self._get_pass()):
       raise ValueError()
 
-
     now = int(datetime.datetime.now().strftime('%s'))
     return self._filter_keys(lambda key:
       key['forever'] or (now < key['expire']))
