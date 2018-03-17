@@ -43,22 +43,43 @@ class August(object):
 
     return dict(headers)
 
+  def _parse_access_token(self, req):
+    # Parse out the access token
+    access_token = req.headers['x-august-access-token']
+
+    # Save the access token
+    token_file = os.path.join(self.DIR, self.TOKEN)
+    with open(token_file, 'w') as f:
+      f.write(access_token)
+
   def _get(self, path):
     # Make the request
     headers = self._headers()
-    return requests.get(urljoin(self.AUGUST_API, path), headers=headers)
+    req = requests.get(urljoin(self.AUGUST_API, path), headers=headers)
+
+    # Parse the access token, then return the request
+    self._parse_access_token(req)
+    return req
 
   def _put(self, path, data):
     # Make the request
     headers = self._headers()
-    return requests.put(urljoin(self.AUGUST_API, path), headers=headers,
+    req = requests.put(urljoin(self.AUGUST_API, path), headers=headers,
                         json=data)
+
+    # Parse the access token, then return the request
+    self._parse_access_token(req)
+    return req
 
   def _post(self, path, data):
     # Make the request
     headers = self._headers()
-    return requests.post(urljoin(self.AUGUST_API, path), headers=headers,
+    req = requests.post(urljoin(self.AUGUST_API, path), headers=headers,
                          json=data)
+
+    # Parse the access token, then return the request
+    self._parse_access_token(req)
+    return req
 
   def _session(self):
     with open(os.path.join(self.DIR, self.AUGUST_USER)) as u:
@@ -71,14 +92,6 @@ class August(object):
             'password': passwd,
             'identifier': 'email:' + user,
           })
-
-        # Parse out the access token
-        access_token = req.headers['x-august-access-token']
-
-        # Save the access token
-        token_file = os.path.join(self.DIR, self.TOKEN)
-        with open(token_file, 'w') as f:
-          f.write(access_token)
 
         # Do the login flow: If the user email isn't validated, do some
         # fun 2FA
@@ -113,13 +126,11 @@ class August(object):
       return ('userId' in req.json())
 
   def open_door(self):
-    self._session()
     with open(os.path.join(self.DIR, self.AUGUST_LOCK_ID)) as l:
       req = self._put('/remoteoperate/' + l.read().strip() + '/unlock', {})
       return (req.status_code == 200)
 
   def test_door(self):
-    self._session()
     with open(os.path.join(self.DIR, self.AUGUST_LOCK_ID)) as l:
       req = self._put('/remoteoperate/' + l.read().strip() + '/status', {})
       return (req.status_code == 200)
