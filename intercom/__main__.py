@@ -68,23 +68,31 @@ def main(argparser):
   app = Flask(__name__)
 
   door = intercom.Intercom()
+  upstairs = august.August()
 
   @app.route('/open/<key>')
   def open_door(key):
     if door.key_valid(key):
       if door.open_door():
-        return util.make_response('Opened!')
+        if upstairs.open_door():
+          return util.make_response('Opened!')
       return util.make_response('Attempt too soon', 403)
-
     return util.make_response('Invalid key', 403)
 
   @app.route('/test/<key>')
   def test_door(key):
     if door.key_valid(key):
       door.test_door()
+      august.test_door()
       return util.make_response('Tested!')
 
     return util.make_response('Invalid key', 403)
+
+  @app.route('/august/validate/<int:code>')
+  def validate(code):
+    if august.validate(code):
+      return util.make_response('Validated!')
+    return util.make_response('Not validated')
 
   @app.route('/key/add/<passcode>')
   def get_key(passcode):
