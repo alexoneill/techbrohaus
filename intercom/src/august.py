@@ -61,7 +61,7 @@ class August(object):
 
       # Body is JSON, parse it
       padded = body + ('=' * (-len(body) % 4))
-      data = base64.b64decode(padded)
+      data = base64.b64decode(padded).decode("utf-8")
       return json.loads(data)
 
   def _get(self, path):
