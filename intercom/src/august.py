@@ -2,6 +2,7 @@
 # aoneill - 03/17/18
 
 from urllib.parse import urljoin
+import base64
 import contextlib
 import datetime
 import json
@@ -52,6 +53,17 @@ class August(object):
     with open(token_file, 'w') as f:
       f.write(access_token)
 
+  def _parse_local_token(self):
+    token_file = os.path.join(self.DIR, self.TOKEN)
+    with open(token_file) as f:
+      # Token stored with JWT, parse out the body
+      (_, body, _) = tuple(f.read().split('.'))
+
+      # Body is JSON, parse it
+      padded = body + ('=' * (-len(body) % 4))
+      data = base64.b64decode(padded)
+      return json.loads(data)
+
   def _get(self, path):
     # Make the request
     headers = self._headers()
@@ -84,6 +96,11 @@ class August(object):
   def _session(self):
     with open(os.path.join(self.DIR, self.AUGUST_USER)) as u:
       with open(os.path.join(self.DIR, self.AUGUST_PASS)) as p:
+        # Check to see if we already did the 2FA flow
+        if (self._parse_local_token()['vEmail']):
+          # Bail if we did
+          return
+
         # Make the session request
         user = u.read().strip()
         passwd = p.read().strip()
